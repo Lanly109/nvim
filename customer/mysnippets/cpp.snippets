@@ -1,0 +1,150 @@
+snippet tc "Basic template" b
+/*
+ * Author: `!v g:snips_author`
+ * Time: `!v strftime("%Y-%m-%d %H:%M:%S")`
+*/
+
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long LL;
+
+int main(void) {
+    ios::sync_with_stdio(false); 
+    cin.tie(0); cout.tie(0);
+
+	${0}
+
+    return 0;
+}
+endsnippet
+
+snippet tct "Basic template with cases" b
+/*
+ * Author: `!v g:snips_author`
+ * Time: `!v strftime("%Y-%m-%d %H:%M:%S")`
+*/
+
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long LL;
+
+int main(void) {
+    ios::sync_with_stdio(false); 
+    cin.tie(0); 
+    cout.tie(0);
+    int kase; cin>>kase;
+    for (int ii = 1; ii <= kase; ii++) {
+        ${1:// }cout<<"Case #"<<ii<<": ";
+		${0}
+    }
+    return 0;
+}
+endsnippet
+
+snippet tr "Fast I/O template" b
+/*
+ * Author: `!v g:snips_author`
+ * Time: `!v strftime("%Y-%m-%d %H:%M:%S")`
+*/
+
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long LL;
+
+template <typename T>
+void read(T &x) {
+    int s = 0, c = getchar();
+    x = 0;
+    while (isspace(c)) c = getchar();
+    if (c == 45) s = 1, c = getchar();
+    while (isdigit(c)) x = (x << 3) + (x << 1) + (c ^ 48), c = getchar();
+    if (s) x = -x;
+}
+
+template <typename T, typename... rest>
+void read(T &x, rest&... Rest) {
+    read(x);
+    read(Rest...);
+}
+
+template <typename T>
+void write(T x, char c = ' ') {
+    int b[40], l = 0;
+    if (x < 0) putchar(45), x = -x;
+    while (x > 0) b[l++] = x % 10, x /= 10;
+    if (!l) putchar(48);
+    while (l) putchar(b[--l] | 48);
+    putchar(c);
+}
+
+int main(void) {
+	${0}
+    return 0;
+}
+endsnippet
+
+snippet trt "Fast I/O template with cases" b
+/*
+ * Author: `!v g:snips_author`
+ * Time: `!v strftime("%Y-%m-%d %H:%M:%S")`
+*/
+
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long LL;
+
+template <typename T>
+void read(T &x) {
+    int s = 0, c = getchar();
+    x = 0;
+    while (isspace(c)) c = getchar();
+    if (c == 45) s = 1, c = getchar();
+    while (isdigit(c)) x = (x << 3) + (x << 1) + (c ^ 48), c = getchar();
+    if (s) x = -x;
+}
+
+template <typename T, typename... rest>
+void read(T &x, rest&... Rest) {
+    read(x);
+    read(Rest...);
+}
+
+template <typename T>
+void write(T x, char c = ' ') {
+    int b[40], l = 0;
+    if (x < 0) putchar(45), x = -x;
+    while (x > 0) b[l++] = x % 10, x /= 10;
+    if (!l) putchar(48);
+    while (l) putchar(b[--l] | 48);
+    putchar(c);
+}
+
+int main(void) {
+    int kase; read(kase);
+    for (int ii = 1; ii <= kase; ii++) {
+        ${1:// }printf("Case #%d: ", ii);
+		${0}
+        
+    }
+    return 0;
+}
+endsnippet
+
+snippet qpower "FAST Power" b
+long long qpower(long long a, long long b){
+	long long qwq = 1;
+	while(b){
+		if (b & 1)
+			qwq = qwq * a % mo;
+		a = a * a % mo;
+		b >>= 1;
+	}
+	return qwq;
+}
+
+long long inv(long long x){
+	return qpower(x, mo - 2);
+}
+
+${0}
+endsnippet
