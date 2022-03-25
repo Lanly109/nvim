@@ -1,23 +1,28 @@
 call plug#begin()
-Plug 'vim-airline/vim-airline'
-Plug 'vim-airline/vim-airline-themes'
+Plug 'dracula/vim', { 'as': 'dracula' }
+" Plug 'vim-airline/vim-airline'
+" Plug 'vim-airline/vim-airline-themes'
 Plug 'lervag/vimtex'
 Plug 'preservim/nerdcommenter'
-Plug 'preservim/nerdtree'
 Plug 'machakann/vim-highlightedyank'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'honza/vim-snippets'
-Plug 'dracula/vim', { 'as': 'dracula' }
 Plug 'plasticboy/vim-markdown'
 Plug 'ferrine/md-img-paste.vim'
 Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app & yarn install'  }
 Plug 'lyokha/vim-xkbswitch'
 Plug 'SirVer/ultisnips'
 Plug 'Yggdroot/indentLine'
+Plug 'tpope/vim-surround'
+Plug 'vim-scripts/DoxygenToolkit.vim'
+Plug 'vim-autoformat/vim-autoformat'
+Plug 'pangloss/vim-javascript'
+Plug 'mxw/vim-jsx'
 call plug#end()
 
 
 " ----------basic
+
 filetype plugin on
 " 设置为双字宽显示，否则无法完整显示如:☆
 " set ambiwidth=double
@@ -55,11 +60,11 @@ if version >= 603
      set helplang=cn
      set encoding=utf-8
 endif
+set fileencodings=utf-8,gb2312,gb18030,gbk,ucs-bom,cp936,latin1
+set enc=utf8
 set fencs=utf-8,ucs-bom,shift-jis,gb18030,gbk,gb2312,cp936
 set termencoding=utf-8
 set encoding=utf-8
-set fileencodings=ucs-bom,utf-8,cp936
-set fileencoding=utf-8
 set updatetime=300
 set shortmess+=c
 set signcolumn=yes
@@ -76,29 +81,78 @@ if has("autocmd")
 endif
 
 
+" cf contest
+noremap cc :call CFTest()<CR>
+func! CFTest()
+    exec "w"
+    set splitbelow
+    :sp
+    :term cf test
+endfunc
 
-" ----------NERDTree
-" autocmd vimenter * NERDTree  "自动开启Nerdtree
-let g:NERDTreeWinSize = 25 "设定 NERDTree 视窗大小
-let NERDTreeShowBookmarks=1  " 开启Nerdtree时自动显示Bookmarks
-"打开vim时如果没有文件自动打开NERDTree
-" autocmd vimenter * if !argc()|NERDTree|endif
-"当NERDTree为剩下的唯一窗口时自动关闭
-autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
-" 设置树的显示图标
-let g:NERDTreeDirArrowExpandable = '+'
-let g:NERDTreeDirArrowCollapsible = '-'
-let NERDTreeIgnore = ['\.pyc$']  " 过滤所有.pyc文件不显示
-let g:NERDTreeShowLineNumbers=0 " 是否显示行号
-let g:NERDTreeHidden=0     "不显示隐藏文件
-""Making it prettier
-let NERDTreeMinimalUI = 1
-let NERDTreeDirArrows = 1
-nnoremap <F3> :NERDTreeToggle<CR> " 开启/关闭nerdtree快捷键
+noremap sS :call CFSubmit()<CR>
+func! CFSubmit()
+    exec "w"
+    set splitbelow
+    :sp
+    :term cf submit
+endfunc
+
+" Compile function
+noremap R :call CompileRunGcc()<CR>
+func! CompileRunGcc()
+	exec "w"
+	if &filetype == 'c'
+		exec "!g++ % -o %<"
+		exec "!time ./%<"
+	elseif &filetype == 'cpp'
+		set splitbelow
+		exec "!g++ -std=c++17 % -Wall -o %<"
+		:sp
+		:res -5
+		:term ./%<
+	elseif &filetype == 'cs'
+		set splitbelow
+		silent! exec "!mcs %"
+		:sp
+		:res -5
+		:term mono %<.exe
+	elseif &filetype == 'java'
+		set splitbelow
+		:sp
+		:res -5
+		term javac % && time java %<
+	elseif &filetype == 'sh'
+		:!time bash %
+	elseif &filetype == 'python'
+		set splitbelow
+		:sp
+		:term python3 %
+	elseif &filetype == 'html'
+		silent! exec "!".g:mkdp_browser." % &"
+	elseif &filetype == 'markdown'
+		exec "InstantMarkdownPreview"
+	elseif &filetype == 'tex'
+		silent! exec "VimtexStop"
+		silent! exec "VimtexCompile"
+	elseif &filetype == 'dart'
+		exec "CocCommand flutter.run -d ".g:flutter_default_device." ".g:flutter_run_args
+		silent! exec "CocCommand flutter.dev.openDevLog"
+	elseif &filetype == 'javascript'
+		set splitbelow
+		:sp
+		:term export DEBUG="INFO,ERROR,WARNING"; node --trace-warnings .
+	elseif &filetype == 'go'
+		set splitbelow
+		:sp
+		:term go run .
+	endif
+endfunc
 
 
-
-
+" ----------vimspector
+let g:vimspector_enable_mappings = 'HUMAN'
+ 
 
 " ----------nerdcommenter
 "add spaces after comment delimiters by default
@@ -132,54 +186,55 @@ let g:indent_guides_guide_size            = 1  " 指定对齐线的尺寸
 let g:indent_guides_start_level           = 2  " 从第二层开始可视化显示缩进
 let g:indentLine_setConceal = 0 " 取消indentline的内置conceal设置
 
-" airline
-" 设置状态栏
-let g:airline#extensions#tabline#enabled = 1
-let g:airline#extensions#tabline#left_alt_sep = '|'
-let g:airline#extensions#tabline#buffer_nr_show = 0
-let g:airline#extensions#tabline#formatter = 'default'
-let g:airline_theme = 'desertink'  " 主题
-let g:airline#extensions#keymap#enabled = 1
-let g:airline#extensions#tabline#buffer_idx_mode = 1
-let g:airline#extensions#tabline#buffer_idx_format = {
-       \ '0': '0 ',
-       \ '1': '1 ',
-       \ '2': '2 ',
-       \ '3': '3 ',
-       \ '4': '4 ',
-       \ '5': '5 ',
-       \ '6': '6 ',
-       \ '7': '7 ',
-       \ '8': '8 ',
-       \ '9': '9 '
-       \}
-" 设置切换tab的快捷键 <\> + <i> 切换到第i个 tab
-nmap <leader>1 <Plug>AirlineSelectTab1
-nmap <leader>2 <Plug>AirlineSelectTab2
-nmap <leader>3 <Plug>AirlineSelectTab3
-nmap <leader>4 <Plug>AirlineSelectTab4
-nmap <leader>5 <Plug>AirlineSelectTab5
-nmap <leader>6 <Plug>AirlineSelectTab6
-nmap <leader>7 <Plug>AirlineSelectTab7
-nmap <leader>8 <Plug>AirlineSelectTab8
-nmap <leader>9 <Plug>AirlineSelectTab9
-" 设置切换tab的快捷键 <\> + <-> 切换到前一个 tab
-nmap <leader>- <Plug>AirlineSelectPrevTab
-" 设置切换tab的快捷键 <\> + <+> 切换到后一个 tab
-nmap <leader>+ <Plug>AirlineSelectNextTab
-" 设置切换tab的快捷键 <\> + <q> 退出当前的 tab
-nmap <leader>q :bp<cr>:bd #<cr>
-" 修改了一些个人不喜欢的字符
-if !exists('g:airline_symbols')
-    let g:airline_symbols = {}
-endif
-let g:airline_symbols.linenr = "CL" " current line
-let g:airline_symbols.whitespace = '|'
-let g:airline_symbols.maxlinenr = 'Ml' "maxline
-let g:airline_symbols.branch = 'BR'
-let g:airline_symbols.readonly = "RO"
-let g:airline_symbols.dirty = "DT"
-let g:airline_symbols.crypt = "CR" 
+" " airline
+" " 设置状态栏
+" let g:airline#extensions#tabline#enabled = 1
+" let g:airline#extensions#tabline#left_alt_sep = '|'
+" let g:airline#extensions#tabline#buffer_nr_show = 0
+" let g:airline#extensions#tabline#formatter = 'default'
+" let g:airline_theme = 'desertink'  " 主题
+" let g:airline#extensions#keymap#enabled = 1
+" let g:airline#extensions#tabline#buffer_idx_mode = 1
+" let g:airline#extensions#tabline#buffer_idx_format = {
+"        \ '0': '0 ',
+"        \ '1': '1 ',
+"        \ '2': '2 ',
+"        \ '3': '3 ',
+"        \ '4': '4 ',
+"        \ '5': '5 ',
+"        \ '6': '6 ',
+"        \ '7': '7 ',
+"        \ '8': '8 ',
+"        \ '9': '9 '
+"        \}
+" " 设置切换tab的快捷键 <\> + <i> 切换到第i个 tab
+" nmap <leader>1 <Plug>AirlineSelectTab1
+" nmap <leader>2 <Plug>AirlineSelectTab2
+" nmap <leader>3 <Plug>AirlineSelectTab3
+" nmap <leader>4 <Plug>AirlineSelectTab4
+" nmap <leader>5 <Plug>AirlineSelectTab5
+" nmap <leader>6 <Plug>AirlineSelectTab6
+" nmap <leader>7 <Plug>AirlineSelectTab7
+" nmap <leader>8 <Plug>AirlineSelectTab8
+" nmap <leader>9 <Plug>AirlineSelectTab9
+" " 设置切换tab的快捷键 <\> + <-> 切换到前一个 tab
+" nmap <leader>- <Plug>AirlineSelectPrevTab
+" " 设置切换tab的快捷键 <\> + <+> 切换到后一个 tab
+" nmap <leader>+ <Plug>AirlineSelectNextTab
+" " 设置切换tab的快捷键 <\> + <q> 退出当前的 tab
+" nmap <leader>q :bp<cr>:bd #<cr>
+" " 修改了一些个人不喜欢的字符
+" if !exists('g:airline_symbols')
+"     let g:airline_symbols = {}
+" endif
+" let g:airline_symbols.linenr = "CL" " current line
+" let g:airline_symbols.whitespace = '|'
+" let g:airline_symbols.maxlinenr = 'Ml' "maxline
+" let g:airline_symbols.branch = 'BR'
+" let g:airline_symbols.readonly = "RO"
+" let g:airline_symbols.dirty = "DT"
+" let g:airline_symbols.crypt = "CR"
+" let g:airline_theme='dark' " <theme> 代表某个主题的名称
 
 let g:XkbSwitchEnabled = 1
 
@@ -188,14 +243,13 @@ colorscheme dracula
 
 set number
 
-let g:airline_theme='dark' " <theme> 代表某个主题的名称
 
 " Set internal encoding of vim, not needed on neovim, since coc.nvim using some
 " unicode characters in the file autoload/float.vim
 set encoding=utf-8
 
 " TextEdit might fail if hidden is not set.
-set hidden
+" set hidden
 
 " Some servers have issues with backup files, see #649.
 " set nobackup
@@ -336,7 +390,7 @@ command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organize
 " Add (Neo)Vim's native statusline support.
 " NOTE: Please see `:h coc-status` for integrations with external plugins that
 " provide custom statusline: lightline.vim, vim-airline.
-set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
+" set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
 
 " Mappings for CoCList
 " Show all diagnostics.
@@ -501,6 +555,10 @@ else
 call system(join(l:cmd + [line('.'), shellescape(l:out), shellescape(l:tex)], ' '))
 endif
 endfunction
+inoremap <C-f> <Esc>: silent exec '.!inkscape-figures create "'.getline('.').'" "'.b:vimtex.root.'/figures/"'<CR><CR>:w<CR>
+nnoremap <C-f> : silent exec '!inkscape-figures edit "'.b:vimtex.root.'/figures/" > /dev/null 2>&1 &'<CR><CR>:redraw!<CR>
+
+
 
 " --------------vim-markdown
 let g:vim_markdown_folding_disabled = 1
@@ -509,5 +567,43 @@ let g:vim_markdown_math = 1
 " Press space twice to jump to the next '<++>' and edit it
 noremap <SPACE><SPACE> <Esc>/<++><CR>:nohlsearch<CR>c4l
 
+" --------------vim-hightlightedyank
+let g:highlightedyank_highlight_duration = 300 " 高亮持续时间为 300 毫秒
+
+" autocmd FileType tex iunmap <silent><expr> <tab>
+" autocmd FileType tex iunmap <expr> <s-tab>
+"
+" autocmd FileType tex let g:UltiSnipsExpandTrigger="<tab>"
+" autocmd FileType tex let g:UltiSnipsJumpForwardTrigger="<tab>"
+" autocmd FileType tex let g:UltiSnipsJumpBackwardTrigger="<s-tab>"
+
+" autocmd FileType tex inoremap <silent><expr> <c-j>
+"       \ pumvisible() ? "\<C-n>" :
+"       \ <SID>check_back_space() ? "\<c-j>" :
+"       \ coc#refresh()
+" autocmd FileType tex inoremap <expr><c-k> pumvisible() ? "\<C-p>" : "\<C-h>"
+
 set concealcursor=""
 set conceallevel=2
+
+nnoremap Q :q<ENTER>
+nnoremap W :w<ENTER>
+nnoremap sv <C-w><C-v>
+nnoremap ss <C-w><C-s>
+nnoremap sh <C-w><C-h>
+nnoremap sj <C-w><C-j>
+nnoremap sk <C-w><C-k>
+nnoremap sl <C-w><C-l>
+
+" ------------DoxygenToolkit
+let g:DoxygenToolkit_authorName="Lanly"
+noremap <leader>da :DoxAuthor<CR>
+noremap <leader>dl :DoxLic<CR>
+noremap <leader>dd :Dox<CR>
+noremap <leader>db :DoxBlock<CR>
+noremap <leader>du :DoxUndoc<CR>
+
+" ------------Autoformat
+noremap <leader>bb :Autoformat<CR>:w<CR>
+
+
