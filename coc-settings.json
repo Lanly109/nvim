@@ -1,0 +1,13 @@
+{
+    "java.format.settings.url": "/Users/lanly/.config/coc/extensions/node_modules/redhat.java/eclipse-formatter.xml",
+    "languageserver": {
+        "golang": {
+            "command": "gopls",
+            "rootPatterns": ["go.work", "go.mod", ".vim/", ".git/", ".hg/"],
+            "filetypes": ["go"],
+            "initializationOptions": {
+                "usePlaceholders": true
+            }
+        }
+    }
+}

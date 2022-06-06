@@ -3,6 +3,8 @@ Plug 'dracula/vim', { 'as': 'dracula' }
 " Plug 'vim-airline/vim-airline'
 " Plug 'vim-airline/vim-airline-themes'
 Plug 'lervag/vimtex'
+Plug 'rbgrouleff/bclose.vim'
+Plug 'francoiscabrol/ranger.vim'
 Plug 'preservim/nerdcommenter'
 Plug 'machakann/vim-highlightedyank'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
@@ -18,6 +20,9 @@ Plug 'vim-scripts/DoxygenToolkit.vim'
 Plug 'vim-autoformat/vim-autoformat'
 Plug 'pangloss/vim-javascript'
 Plug 'mxw/vim-jsx'
+Plug 'Yggdroot/LeaderF', { 'do': ':LeaderfInstallCExtension' }
+Plug 'mhinz/vim-startify'
+Plug 'yegappan/mru'
 call plug#end()
 
 
@@ -29,6 +34,7 @@ filetype plugin on
 set t_ut= " 防止vim背景颜色错误
 set showmatch " 高亮匹配括号
 set matchtime=1
+set undofile " 历史撤销
 set report=0
 set ignorecase
 set nocompatible
@@ -146,6 +152,10 @@ func! CompileRunGcc()
 		set splitbelow
 		:sp
 		:term go run .
+	elseif &filetype == 'dot'
+		set splitbelow
+		:sp
+		:term dot -Tpng -o %:r.png % && open %:r.png
 	endif
 endfunc
 
@@ -487,7 +497,7 @@ let g:mkdp_preview_options = {
 
 " use a custom markdown style must be absolute path
 " like '/Users/username/markdown.css' or expand('~/markdown.css')
-let g:mkdp_markdown_css = ''
+let g:mkdp_markdown_css = '/Users/lanly/.config/nvim/plugged/markdown-preview.nvim/app/_static/markdown.css'
 
 " use a custom highlight style must absolute path
 " like '/Users/username/highlight.css' or expand('~/highlight.css')
@@ -506,9 +516,25 @@ let g:mkdp_filetypes = ['markdown']
 
 
 autocmd FileType markdown nmap <buffer><silent> <leader>p :call mdip#MarkdownClipboardImage()<CR>
+autocmd FileType tex nmap <buffer><silent> <leader>p :call mdip#MarkdownClipboardImage()<CR>
 " there are some defaults for image directory and image name, you can change them
-let g:mdip_imgdir = 'img'
+
+let file_name = expand('%:t:r')
+let g:mdip_imgdir = file_name . '-img'
 let g:mdip_imgname = 'image'
+
+function! g:LatexPasteImage(relpath)
+    execute "normal! i\\includegraphics{" . a:relpath . "}\r\\caption{I"
+    let ipos = getcurpos()
+    execute "normal! a" . "mage}"
+    call setpos('.', ipos)
+    execute "normal! ve\<C-g>"
+endfunction
+
+autocmd FileType markdown let g:PasteImageFunction = 'g:MarkdownPasteImage'
+autocmd FileType tex let g:PasteImageFunction = 'g:LatexPasteImage'
+
+
 
 " Trigger configuration. You need to change this to something other than <tab> if you use one of the following:
 " - https://github.com/Valloric/YouCompleteMe
@@ -525,10 +551,10 @@ let g:UltiSnipsSnippetDirectories=["/Users/lanly/.config/nvim/customer/mysnippet
 
 " -----------vimtex
 let g:vimtex_compiler_latexmk_engines = {'_':'-xelatex'}
-let g:vimtex_compiler_latexrun_engines ={'_':'xelatex'}
-let g:vimtex_view_general_viewer
-\ = '/Applications/Skim.app/Contents/SharedSupport/displayline'
-let g:vimtex_view_general_options = '-r @line @pdf @tex'
+let g:vimtex_compiler_latexrun_engines = {'_':'xelatex'}
+let g:vimtex_view_method = 'skim'
+" let g:vimtex_view_general_viewer = '/Applications/Skim.app/Contents/SharedSupport/displayline'
+" let g:vimtex_view_general_options = '-r @line @pdf @tex'
 let g:vimtex_compiler_latexmk = {
     \ 'options' : [
     \   '-shell-escape',
@@ -537,24 +563,25 @@ let g:vimtex_compiler_latexmk = {
 let g:vimtex_quickfix_open_on_warning=0
 
 function! UpdateSkim(status)
-if !a:status | return | endif
+    if !a:status | return | endif
 
-let l:out = b:vimtex.out()
-let l:tex = expand('%:p')
-let l:cmd = [g:vimtex_view_general_viewer, '-r']
+    let l:out = b:vimtex.out()
+    let l:tex = expand('%:p')
+    let l:cmd = [g:vimtex_view_general_viewer, '-r']
 
-if !empty(system('pgrep Skim'))
-call extend(l:cmd, ['-g'])
-endif
+    if !empty(system('pgrep Skim'))
+    call extend(l:cmd, ['-g'])
+    endif
 
-if has('nvim')
-call jobstart(l:cmd + [line('.'), l:out, l:tex])
-elseif has('job')
-call job_start(l:cmd + [line('.'), l:out, l:tex])
-else
-call system(join(l:cmd + [line('.'), shellescape(l:out), shellescape(l:tex)], ' '))
-endif
+    if has('nvim')
+    call jobstart(l:cmd + [line('.'), l:out, l:tex])
+    elseif has('job')
+    call job_start(l:cmd + [line('.'), l:out, l:tex])
+    else
+    call system(join(l:cmd + [line('.'), shellescape(l:out), shellescape(l:tex)], ' '))
+    endif
 endfunction
+
 inoremap <C-f> <Esc>: silent exec '.!inkscape-figures create "'.getline('.').'" "'.b:vimtex.root.'/figures/"'<CR><CR>:w<CR>
 nnoremap <C-f> : silent exec '!inkscape-figures edit "'.b:vimtex.root.'/figures/" > /dev/null 2>&1 &'<CR><CR>:redraw!<CR>
 
